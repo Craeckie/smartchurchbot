@@ -5,3 +5,4 @@ python-telegram-bot~=13.8.1
 wheel==0.37.0
 redis
 bs4
+pysocks~=1.7.1
