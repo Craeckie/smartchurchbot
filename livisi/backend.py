@@ -3,8 +3,8 @@ from livisi.utils import action
 
 
 class Livisi:
-    def __init__(self, username, password, proxy=None):
-        self.wrapper = DataWrapper(username, password, proxy=None)
+    def __init__(self, username, password, redis_host=None, proxy=None):
+        self.wrapper = DataWrapper(username, password, redis_host=redis_host, proxy=proxy)
 
     def get_messages(self):
         return self.wrapper.get_messages()

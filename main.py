@@ -19,9 +19,10 @@ request_kwargs = {
 updater = Updater(token=os.environ.get('BOT_TOKEN'), use_context=True, request_kwargs=request_kwargs)
 dispatcher = updater.dispatcher
 
-thermo_backend = Livisi(os.environ.get('LIVISI_USERNAME'),
-                        os.environ.get('LIVISI_PASSWORD'),
-                        proxy)
+thermo_backend = Livisi(username=os.environ.get('LIVISI_USERNAME'),
+                        password=os.environ.get('LIVISI_PASSWORD'),
+                        redis_host=os.environ.get('REDIS_HOST'),
+                        proxy=proxy)
 
 NEWS_MARKUP = 'Nachrichten'
 MANUAL_THERMOSTATS = 'Manuelle Thermostate'

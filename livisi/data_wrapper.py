@@ -6,10 +6,10 @@ from livisi.utils import login, get_token, call_function, action
 
 
 class DataWrapper:
-    def __init__(self, username, password, proxy=None):
+    def __init__(self, username, password, redis_host='localhost', proxy=None):
         self.session, redirect_url = login(username, password, proxy)
         self.session = get_token(self.session, redirect_url)
-        self.redis = Redis()
+        self.redis = Redis(redis_host)
 
     def get_messages(self):
         messages = call_function(self.session, 'message')
