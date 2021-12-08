@@ -3,8 +3,8 @@ from livisi.utils import action
 
 
 class Livisi:
-    def __init__(self, username, password):
-        self.wrapper = DataWrapper(username, password)
+    def __init__(self, username, password, proxy=None):
+        self.wrapper = DataWrapper(username, password, proxy=None)
 
     def get_messages(self):
         return self.wrapper.get_messages()

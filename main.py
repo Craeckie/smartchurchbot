@@ -11,10 +11,17 @@ from livisi.backend import Livisi
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
-updater = Updater(token=os.environ.get('BOT_TOKEN'), use_context=True)
+proxy = os.environ.get('PROXY')
+request_kwargs = {
+    'proxy_url': proxy
+} if proxy else None
+
+updater = Updater(token=os.environ.get('BOT_TOKEN'), use_context=True, request_kwargs=request_kwargs)
 dispatcher = updater.dispatcher
 
-thermo_backend = Livisi(os.environ.get('LIVISI_USERNAME'), os.environ.get('LIVISI_PASSWORD'))
+thermo_backend = Livisi(os.environ.get('LIVISI_USERNAME'),
+                        os.environ.get('LIVISI_PASSWORD'),
+                        proxy)
 
 NEWS_MARKUP = 'Nachrichten'
 MANUAL_THERMOSTATS = 'Manuelle Thermostate'

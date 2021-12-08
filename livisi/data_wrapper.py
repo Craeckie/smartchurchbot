@@ -6,13 +6,13 @@ from livisi.utils import login, get_token, call_function, action
 
 
 class DataWrapper:
-    def __init__(self, username, password):
-        session, redirect_url = login(username, password)
-        self.auth_header = get_token(session, redirect_url)
+    def __init__(self, username, password, proxy=None):
+        self.session, redirect_url = login(username, password, proxy)
+        self.session = get_token(self.session, redirect_url)
         self.redis = Redis()
 
     def get_messages(self):
-        messages = call_function('message', self.auth_header)
+        messages = call_function(self.session, 'message')
         return messages
 
     def get_devices(self):
@@ -20,7 +20,7 @@ class DataWrapper:
         raw = self.redis.get(redis_key)
         devices = json.loads(raw) if raw else {}
         if not devices:
-            data = call_function('device', self.auth_header)
+            data = call_function(self.session, 'device')
             for item in data:
                 if item['type'] == 'RST':
                     config = item['config']
@@ -42,7 +42,7 @@ class DataWrapper:
         raw = self.redis.get(redis_key)
         locations = json.loads(raw) if raw else {}
         if not locations:
-            data = call_function('location', self.auth_header)
+            data = call_function(self.session, 'location')
             for item in data:
                 name = item['config']['name']
                 locations[name] = {
@@ -56,7 +56,7 @@ class DataWrapper:
         raw = self.redis.get(redis_key)
         capability_states = json.loads(raw) if raw else {}
         if not capability_states:
-            data = call_function('capability/states', self.auth_header)
+            data = call_function(self.session, 'capability/states')
             for item in data:
                 item_id = item['id']
                 capability_states[item_id] = item['state']
@@ -79,7 +79,7 @@ class DataWrapper:
         return location_devices
 
     def action(self, target, params):
-        res = action(self.auth_header, target=target, params=params)
+        res = action(self.session, target=target, params=params)
         data = res.json()
         return data
 

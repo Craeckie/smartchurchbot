@@ -6,8 +6,12 @@ from urllib import parse
 from bs4 import BeautifulSoup
 
 
-def login(username, password):
+def login(username: str, password: str, proxy: str = None):
     session = requests.session()
+    session.proxies.update({
+        'http': proxy,
+        'https': proxy
+    })
     url = 'https://auth.services-smarthome.de/authorize?response_type=code&client_id=35903586&redirect_uri=https%3A%2F%2Fhome.livisi.de%2F%23%2Fauth&scope=&lang=de-DE&state=1065019c-f600-41d4-9037-c65830ad199a'
     res = session.get(url)
     h = BeautifulSoup(res.text, 'html.parser')
@@ -27,7 +31,7 @@ def login(username, password):
         return (session, redirect_url)
 
 
-def get_token(session, redirect_url):
+def get_token(session: requests.Session, redirect_url):
     params = parse.parse_qs(parse.urlparse(redirect_url).fragment.split('?')[1])
     res = session.post('https://auth.services-smarthome.de/token', data={"Code": params['code'][0],
                                                                          "Grant_Type": "authorization_code",
@@ -36,15 +40,16 @@ def get_token(session, redirect_url):
 
     token = res.json()
     auth_header = {'Authorization': f'Bearer {token["access_token"]}'}
-    return auth_header
+    session.headers.update(auth_header)
+    return session
 
 
-def call_function(function, auth_header):
-    res = requests.get(parse.urljoin('https://api.services-smarthome.de/', function), headers=auth_header)
+def call_function(session: requests.Session, function):
+    res = session.get(parse.urljoin('https://api.services-smarthome.de/', function))
     return res.json()
 
 
-def action(auth_header, target, params, type='SetState', id=None):
+def action(session: requests.Session, target: str, params: dict, type='SetState', id=None):
     if not id:
         id = hex(random.getrandbits(128))[2:]
     data = {
@@ -54,5 +59,5 @@ def action(auth_header, target, params, type='SetState', id=None):
         "target": target,
         "params": params
     }
-    res = requests.post('https://api.services-smarthome.de/action', json=data, headers=auth_header)
+    res = session.post('https://api.services-smarthome.de/action', json=data)
     return res
