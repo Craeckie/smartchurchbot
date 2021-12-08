@@ -1,5 +1,4 @@
 from livisi.data_wrapper import DataWrapper
-from livisi.utils import action
 
 
 class Livisi:
@@ -44,6 +43,6 @@ class Livisi:
                         cap_id = device['cap_id']
                         break
         res = self.wrapper.action(target=f'/capability/{cap_id}',
-                            params={"operationMode": {"type": "Constant", "value": state}})
+                                  params={"operationMode": {"type": "Constant", "value": state}})
 
         return 'resultCode' in res and res['resultCode'] == 'Success'

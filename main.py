@@ -14,7 +14,8 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 proxy = os.environ.get('PROXY')
 request_kwargs = {
     'proxy_url': proxy
-} if proxy else None
+} if proxy and os.environ.get('PROXY_FOR_TELEGRAM', 'n').lower().startswith('y') \
+  else None
 
 updater = Updater(token=os.environ.get('BOT_TOKEN'), use_context=True, request_kwargs=request_kwargs)
 dispatcher = updater.dispatcher
