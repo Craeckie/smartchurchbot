@@ -7,6 +7,7 @@ from telegram.ext import CallbackContext, CommandHandler, MessageHandler, Filter
 from telegram.ext import Updater
 
 from livisi.backend import Livisi
+from utils import restricted
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -15,7 +16,7 @@ proxy = os.environ.get('PROXY')
 request_kwargs = {
     'proxy_url': proxy
 } if proxy and os.environ.get('PROXY_FOR_TELEGRAM', 'n').lower().startswith('y') \
-  else None
+    else None
 
 updater = Updater(token=os.environ.get('BOT_TOKEN'), use_context=True, request_kwargs=request_kwargs)
 dispatcher = updater.dispatcher
@@ -29,12 +30,15 @@ NEWS_MARKUP = 'Nachrichten'
 MANUAL_THERMOSTATS = 'Manuelle Thermostate'
 MAIN_MARKUP = ReplyKeyboardMarkup([[NEWS_MARKUP, MANUAL_THERMOSTATS]])
 
-#TODO: access control
+
+# TODO: access control
+
 
 def start(update: Update, context: CallbackContext):
     update.message.reply_text('Willkommen beim SmartChurch-Bot', parse_mode='HTML', reply_markup=MAIN_MARKUP)
 
 
+@restricted
 def news(update: Update, context: CallbackContext):
     messages = thermo_backend.get_messages()
     if not messages:
@@ -44,6 +48,7 @@ def news(update: Update, context: CallbackContext):
     update.message.reply_text(msg, reply_markup=MAIN_MARKUP)
 
 
+@restricted
 def device_state(update: Update, context: CallbackContext):
     device_states = thermo_backend.get_device_states()
     msg = ''
@@ -58,6 +63,7 @@ def device_state(update: Update, context: CallbackContext):
     update.message.reply_text(msg, parse_mode='HTML', reply_markup=MAIN_MARKUP)
 
 
+@restricted
 def device_state_auto(update: Update, context: CallbackContext):
     text = update.message.text
     index = int(re.match('/TA([0-9]+)', text).group(1))
