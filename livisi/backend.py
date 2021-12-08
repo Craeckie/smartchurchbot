@@ -1,39 +1,49 @@
-from livisi.utils import login, call_function, get_token
+from livisi.data_wrapper import DataWrapper
+from livisi.utils import action
 
 
 class Livisi:
     def __init__(self, username, password):
-        session, redirect_url = login(username, password)
-        self.auth_header = get_token(session, redirect_url)
+        self.wrapper = DataWrapper(username, password)
 
     def get_messages(self):
-        messages = call_function('message', self.auth_header)
-        return messages
+        return self.wrapper.get_messages()
 
     def get_device_states(self):
         device_states = {}
-        devices = call_function('device', self.auth_header)
-        capability_states = call_function('capability/states', self.auth_header)
-        for device in devices:
-            if device['type'] == 'RST':
-                name = device['config']['name']
-                # print(f"{device['id']}: {name}")
-                state = None
-                dev_cap_ids = [cap_path[len('/capability/'):] for cap_path in device['capabilities']]
-                # print(dev_cap_ids)
-                for cur_state in capability_states:
-                    cur_cap_id = cur_state['id']
-                    if cur_cap_id in dev_cap_ids:
-                        state = cur_state['state']
+        location_devices = self.wrapper.get_devices_by_location()
+        capability_states = self.wrapper.get_capability_states()
+        local_index = 0
+        for location_name, location in location_devices.items():
+            devices = location['devices']
+            for device in devices:
+                for cur_cap_id, state in capability_states.items():
+                    if cur_cap_id in device['capabilities']:
                         if 'operationMode' in state:
                             mode = state['operationMode']['value']
                             device_data = {
-                                'name': name,
-                                'cap_id': cur_cap_id
+                                'name': device['name'],
+                                'cap_id': cur_cap_id,
+                                'local_index': local_index,
                             }
-                            if mode in device_states:
-                                device_states[mode].append(device_data)
-                            else:
-                                device_states[mode] = [device_data]
-                            # print(f"  {cur_state['id']}: {}")
+                            if mode not in device_states:
+                                device_states[mode] = {}
+                            if location_name not in device_states[mode]:
+                                device_states[mode][location_name] = []
+                            device_states[mode][location_name].append(device_data)
+                local_index += 1
         return device_states
+
+    def change_device_state(self, local_index, state='Auto'):
+        device_states = self.get_device_states()
+        cap_id = None
+        for mode, location_data in device_states.items():
+            for location_name, devices in location_data.items():
+                for device in devices:
+                    if device['local_index'] == local_index:
+                        cap_id = device['cap_id']
+                        break
+        res = self.wrapper.action(target=f'/capability/{cap_id}',
+                            params={"operationMode": {"type": "Constant", "value": state}})
+
+        return 'resultCode' in res and res['resultCode'] == 'Success'

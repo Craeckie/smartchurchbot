@@ -10,7 +10,7 @@ def login(username, password):
     session = requests.session()
     url = 'https://auth.services-smarthome.de/authorize?response_type=code&client_id=35903586&redirect_uri=https%3A%2F%2Fhome.livisi.de%2F%23%2Fauth&scope=&lang=de-DE&state=1065019c-f600-41d4-9037-c65830ad199a'
     res = session.get(url)
-    h = BeautifulSoup(res.text)
+    h = BeautifulSoup(res.text, 'html.parser')
     form = h.form
     form_data = {element.attrs['name']: element.attrs.get('value', '') for element in
                  form.find_all('input', {'name': True})}
@@ -54,6 +54,5 @@ def action(auth_header, target, params, type='SetState', id=None):
         "target": target,
         "params": params
     }
-    print(data)
     res = requests.post('https://api.services-smarthome.de/action', json=data, headers=auth_header)
     return res
