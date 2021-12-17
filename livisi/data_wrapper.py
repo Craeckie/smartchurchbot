@@ -67,12 +67,12 @@ class DataWrapper:
         locations = self.get_locations()
         devices = self.get_devices()
         location_devices = {}
-        for location_name, location in locations.items():
+        for location_name, location in sorted(locations.items()):
             location_devices[location_name] = {
                 'id': location['id'],
                 'devices': [],
             }
-            for device_name, device in devices.items():
+            for device_name, device in sorted(devices.items()):
                 device_location = device['location']
                 if device_location == location['id']:
                     location_devices[location_name]['devices'].append(device)
