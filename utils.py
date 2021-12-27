@@ -9,7 +9,8 @@ def restricted(func):
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
         if user_id not in LIST_OF_ADMINS:
-            print("Unauthorized access denied for {}.".format(user_id))
+            #print("Unauthorized access denied for {}.".format(user_id))
+            update.message.reply_text(f'Zugriff verweigert. Deine ID ist {user_id}.')
             return
         return func(update, context, *args, **kwargs)
 

@@ -31,9 +31,7 @@ MANUAL_THERMOSTATS = 'Manuelle Thermostate'
 MAIN_MARKUP = ReplyKeyboardMarkup([[NEWS_MARKUP, MANUAL_THERMOSTATS]])
 
 
-# TODO: access control
-
-
+@restricted
 def start(update: Update, context: CallbackContext):
     update.message.reply_text('Willkommen beim SmartChurch-Bot', parse_mode='HTML', reply_markup=MAIN_MARKUP)
 
