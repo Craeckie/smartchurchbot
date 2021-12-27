@@ -1,8 +1,5 @@
 requests
-pip==21.3.1
-setuptools==58.2.0
-python-telegram-bot~=13.8.1
-wheel==0.37.0
-redis
-bs4
+python-telegram-bot~=13.9
+redis~=4.0.2
+beautifulsoup4~=4.10.0
 pysocks~=1.7.1
