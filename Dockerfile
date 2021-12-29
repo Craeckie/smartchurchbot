@@ -15,4 +15,6 @@ RUN apk add --virtual .build build-base && \
     pip install -r re.txt && \
     apk del .build
 
+STOPSIGNAL SIGINT
+
 CMD ["python3", "main.py"]
