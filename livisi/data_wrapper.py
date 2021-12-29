@@ -67,7 +67,7 @@ class DataWrapper:
             for item in data:
                 item_id = item['id']
                 capability_states[item_id] = item['state']
-            self.redis.set(redis_key, json.dumps(capability_states), ex=15)
+            self.redis.set(redis_key, json.dumps(capability_states), ex=5)
         return capability_states
 
     def get_devices_by_location(self):
