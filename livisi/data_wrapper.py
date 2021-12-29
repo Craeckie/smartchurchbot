@@ -12,7 +12,14 @@ class DataWrapper:
         self.redis = Redis(redis_host)
 
     def get_messages(self):
-        messages = call_function(self.session, 'message')
+        data = call_function(self.session, 'message')
+        messages = {}
+        for entry in data:
+            device_name = entry['properties']['deviceName']
+            if device_name in messages:
+                messages[device_name].append(entry)
+            else:
+                messages[device_name] = [entry]
         return messages
 
     def get_devices(self):

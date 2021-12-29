@@ -1,7 +1,8 @@
 import os
 import re
 
-from telegram import Update, ReplyKeyboardMarkup
+import telegram.constants
+from telegram import Update, ReplyKeyboardMarkup, ParseMode
 from telegram.ext import CallbackContext, CommandHandler, MessageHandler, Filters, RegexHandler
 from telegram.ext import Updater
 
@@ -29,7 +30,7 @@ MAIN_MARKUP = ReplyKeyboardMarkup([[NEWS_MARKUP, MANUAL_THERMOSTATS]])
 
 @restricted
 def start(update: Update, context: CallbackContext):
-    update.message.reply_text('Willkommen beim SmartChurch-Bot', parse_mode='HTML', reply_markup=MAIN_MARKUP)
+    update.message.reply_text('Willkommen beim SmartChurch-Bot', parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
 
 
 @restricted
@@ -38,8 +39,13 @@ def news(update: Update, context: CallbackContext):
     if not messages:
         msg = 'Keine Nachrichten gefunden'
     else:
-        msg = '\n'.join(messages)
-    update.message.reply_text(msg, reply_markup=MAIN_MARKUP)
+        msg = ''
+        for device_name, entries in messages.items():
+            msg += f'<pre>{device_name}</pre>\n'
+            for entry in entries:
+                msg += f'- {entry["type"]}\n'
+            msg += '\n'
+    update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
 
 
 @restricted
@@ -54,7 +60,7 @@ def device_state(update: Update, context: CallbackContext):
                 msg += f'{device["name"]}: /TA{device["local_index"]}\n'
 
             msg += '\n'
-    update.message.reply_text(msg, parse_mode='HTML', reply_markup=MAIN_MARKUP)
+    update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
 
 
 @restricted
@@ -66,7 +72,7 @@ def device_state_auto(update: Update, context: CallbackContext):
         msg = f'Thermostat wurde erfolgreich auf {new_state} gestellt'
     else:
         msg = 'Es ist ein Fehler aufgetreten'
-    update.message.reply_text(msg, parse_mode='HTML', reply_markup=MAIN_MARKUP)
+    update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
 
 
 start_handler = CommandHandler('start', start)
