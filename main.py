@@ -1,5 +1,4 @@
 import os
-import logging
 import re
 
 from telegram import Update, ReplyKeyboardMarkup
@@ -7,10 +6,7 @@ from telegram.ext import CallbackContext, CommandHandler, MessageHandler, Filter
 from telegram.ext import Updater
 
 from livisi.backend import Livisi
-from utils import restricted
-
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+from utils import restricted, logging
 
 proxy = os.environ.get('PROXY')
 request_kwargs = {
