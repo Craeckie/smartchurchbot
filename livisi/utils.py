@@ -45,7 +45,7 @@ def get_token(session: requests.Session, redirect_url):
 
 
 def call_function(session: requests.Session, function):
-    res = session.get(parse.urljoin('https://api.services-smarthome.de/', function))
+    res = session.get(parse.urljoin('https://api.services-smarthome.de/', function), timeout=40)
     return res.json()
 
 

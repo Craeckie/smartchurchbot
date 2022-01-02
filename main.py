@@ -35,43 +35,52 @@ def start(update: Update, context: CallbackContext):
 
 @restricted
 def news(update: Update, context: CallbackContext):
-    messages = thermo_backend.get_messages()
-    if not messages:
-        msg = 'Keine Nachrichten gefunden'
-    else:
-        msg = ''
-        for device_name, entries in messages.items():
-            msg += f'<pre>{device_name}</pre>\n'
-            for entry in entries:
-                msg += f'- {entry["type"]}\n'
-            msg += '\n'
+    try:
+        messages = thermo_backend.get_messages()
+        if not messages:
+            msg = 'Keine Nachrichten gefunden'
+        else:
+            msg = ''
+            for device_name, entries in messages.items():
+                msg += f'<pre>{device_name}</pre>\n'
+                for entry in entries:
+                    msg += f'- {entry["type"]}\n'
+                msg += '\n'
+    except Exception as e:
+        msg = e
     update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
 
 
 @restricted
 def device_state(update: Update, context: CallbackContext):
-    device_states = thermo_backend.get_device_states()
-    msg = ''
-    for mode, location_data in device_states.items():
-        msg += f'<b>{mode.capitalize()}</b>\n'
-        for location_name, devices in location_data.items():
-            msg += f'<pre>{location_name}</pre>\n'
-            for device in devices:
-                msg += f'{device["name"]}: /TA{device["local_index"]}\n'
+    try:
+        device_states = thermo_backend.get_device_states()
+        msg = ''
+        for mode, location_data in device_states.items():
+            msg += f'<b>{mode.capitalize()}</b>\n'
+            for location_name, devices in location_data.items():
+                msg += f'<pre>{location_name}</pre>\n'
+                for device in devices:
+                    msg += f'{device["name"]}: /TA{device["local_index"]}\n'
 
-            msg += '\n'
+                msg += '\n'
+    except Exception as e:
+        msg = e
     update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
 
 
 @restricted
 def device_state_auto(update: Update, context: CallbackContext):
-    text = update.message.text
-    index = int(re.match('/TA([0-9]+)', text).group(1))
-    new_state = 'Auto'  # Auto / Manu
-    if thermo_backend.change_device_state(index, state=new_state):
-        msg = f'Thermostat wurde erfolgreich auf {new_state} gestellt'
-    else:
-        msg = 'Es ist ein Fehler aufgetreten'
+    try:
+        text = update.message.text
+        index = int(re.match('/TA([0-9]+)', text).group(1))
+        new_state = 'Auto'  # Auto / Manu
+        if thermo_backend.change_device_state(index, state=new_state):
+            msg = f'Thermostat wurde erfolgreich auf {new_state} gestellt'
+        else:
+            msg = 'Es ist ein Fehler aufgetreten'
+    except Exception as e:
+        msg = e
     update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
 
 
