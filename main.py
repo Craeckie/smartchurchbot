@@ -46,9 +46,9 @@ def news(update: Update, context: CallbackContext):
                 for entry in entries:
                     msg += f'- {entry["type"]}\n'
                 msg += '\n'
+        update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
     except Exception as e:
-        msg = e
-    update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
+        update.message.reply_text(str(e), reply_markup=MAIN_MARKUP)
 
 
 @restricted
@@ -64,9 +64,9 @@ def device_state(update: Update, context: CallbackContext):
                     msg += f'{device["name"]}: /TA{device["local_index"]}\n'
 
                 msg += '\n'
+        update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
     except Exception as e:
-        msg = e
-    update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
+        update.message.reply_text(str(e), reply_markup=MAIN_MARKUP)
 
 
 @restricted
@@ -79,9 +79,9 @@ def device_state_auto(update: Update, context: CallbackContext):
             msg = f'Thermostat wurde erfolgreich auf {new_state} gestellt'
         else:
             msg = 'Es ist ein Fehler aufgetreten'
+        update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
     except Exception as e:
-        msg = e
-    update.message.reply_text(msg, parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
+        update.message.reply_text(str(e), reply_markup=MAIN_MARKUP)
 
 
 start_handler = CommandHandler('start', start)
