@@ -7,7 +7,7 @@ from telegram.ext import CallbackContext, CommandHandler, MessageHandler, Filter
 from telegram.ext import Updater
 
 from livisi.backend import Livisi
-from utils import restricted, logging
+from utils import restricted, logging, print_exception
 
 proxy = os.environ.get('PROXY')
 request_kwargs = {
@@ -48,7 +48,7 @@ def news(update: Update, context: CallbackContext):
                 msg += '\n'
         update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
     except Exception as e:
-        update.message.reply_text(str(e), reply_markup=MAIN_MARKUP)
+        update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
 
 
 @restricted
@@ -66,7 +66,7 @@ def device_state(update: Update, context: CallbackContext):
                 msg += '\n'
         update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
     except Exception as e:
-        update.message.reply_text(str(e), reply_markup=MAIN_MARKUP)
+        update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
 
 
 @restricted
@@ -81,7 +81,7 @@ def device_state_auto(update: Update, context: CallbackContext):
             msg = 'Es ist ein Fehler aufgetreten'
         update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
     except Exception as e:
-        update.message.reply_text(str(e), reply_markup=MAIN_MARKUP)
+        update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
 
 
 start_handler = CommandHandler('start', start)

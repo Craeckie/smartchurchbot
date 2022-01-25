@@ -1,4 +1,5 @@
 import logging
+import traceback
 from functools import wraps
 import os
 
@@ -19,3 +20,9 @@ def restricted(func):
         return func(update, context, *args, **kwargs)
 
     return wrapped
+
+
+def print_exception(e):
+    trace = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+    msg = f"Failed!\nException: {trace}"
+    return msg
