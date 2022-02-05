@@ -2,7 +2,7 @@ import json
 
 from redis import Redis
 
-from livisi.utils import login, get_token, call_function, action, print_exception
+from livisi.utils import login, get_token, call_function, action
 
 
 class DataWrapper:
@@ -22,7 +22,6 @@ class DataWrapper:
                 else:
                     messages[device_name] = [entry]
         except Exception as e:
-            print_exception(e)
             raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return messages
 
@@ -48,7 +47,6 @@ class DataWrapper:
                         }
                 self.redis.set(redis_key, json.dumps(devices), ex=3600)
             except Exception as e:
-                print_exception(e)
                 raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return devices
 
@@ -65,7 +63,6 @@ class DataWrapper:
                         'id': item['id']
                     }
             except Exception as e:
-                print_exception(e)
                 raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
 
         self.redis.set(redis_key, json.dumps(locations), ex=24 * 3600)
@@ -83,7 +80,6 @@ class DataWrapper:
                     capability_states[item_id] = item['state']
                 self.redis.set(redis_key, json.dumps(capability_states), ex=5)
             except Exception as e:
-                print_exception(e)
                 raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return capability_states
 
