@@ -2,7 +2,7 @@ import json
 
 from redis import Redis
 
-from livisi.utils import login, get_token, call_function, action
+from livisi.utils import login, get_token, call_function, action, print_exception
 
 
 class DataWrapper:
@@ -13,13 +13,17 @@ class DataWrapper:
 
     def get_messages(self):
         data = call_function(self.session, 'message')
-        messages = {}
-        for entry in data:
-            device_name = entry['properties']['deviceName']
-            if device_name in messages:
-                messages[device_name].append(entry)
-            else:
-                messages[device_name] = [entry]
+        try:
+            messages = {}
+            for entry in data:
+                device_name = entry['properties']['deviceName']
+                if device_name in messages:
+                    messages[device_name].append(entry)
+                else:
+                    messages[device_name] = [entry]
+        except Exception as e:
+            print_exception(e)
+            raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return messages
 
     def get_devices(self):
@@ -28,20 +32,24 @@ class DataWrapper:
         devices = json.loads(raw) if raw else {}
         if not devices:
             data = call_function(self.session, 'device')
-            for item in data:
-                if item['type'] == 'RST':
-                    config = item['config']
-                    name = config['name']
-                    devices[name] = {
-                        'id': item['id'],
-                        'name': name,
-                        'type': item['type'],
-                        'serialNumber': item['serialNumber'],
-                        'capabilities': [cap_path[len('/capability/'):] for cap_path in item['capabilities']],
-                        'location': item['location'][len('/location/'):],
-                        'raw': item
-                    }
-            self.redis.set(redis_key, json.dumps(devices), ex=3600)
+            try:
+                for item in data:
+                    if item['type'] == 'RST':
+                        config = item['config']
+                        name = config['name']
+                        devices[name] = {
+                            'id': item['id'],
+                            'name': name,
+                            'type': item['type'],
+                            'serialNumber': item['serialNumber'],
+                            'capabilities': [cap_path[len('/capability/'):] for cap_path in item['capabilities']],
+                            'location': item['location'][len('/location/'):],
+                            'raw': item
+                        }
+                self.redis.set(redis_key, json.dumps(devices), ex=3600)
+            except Exception as e:
+                print_exception(e)
+                raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return devices
 
     def get_locations(self):
@@ -50,11 +58,16 @@ class DataWrapper:
         locations = json.loads(raw) if raw else {}
         if not locations:
             data = call_function(self.session, 'location')
-            for item in data:
-                name = item['config']['name']
-                locations[name] = {
-                    'id': item['id']
-                }
+            try:
+                for item in data:
+                    name = item['config']['name']
+                    locations[name] = {
+                        'id': item['id']
+                    }
+            except Exception as e:
+                print_exception(e)
+                raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
+
         self.redis.set(redis_key, json.dumps(locations), ex=24 * 3600)
         return locations
 
@@ -64,10 +77,14 @@ class DataWrapper:
         capability_states = json.loads(raw) if raw else {}
         if not capability_states:
             data = call_function(self.session, 'capability/states')
-            for item in data:
-                item_id = item['id']
-                capability_states[item_id] = item['state']
-            self.redis.set(redis_key, json.dumps(capability_states), ex=5)
+            try:
+                for item in data:
+                    item_id = item['id']
+                    capability_states[item_id] = item['state']
+                self.redis.set(redis_key, json.dumps(capability_states), ex=5)
+            except Exception as e:
+                print_exception(e)
+                raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return capability_states
 
     def get_devices_by_location(self):
