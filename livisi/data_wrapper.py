@@ -2,17 +2,18 @@ import json
 
 from redis import Redis
 
-from livisi.utils import login, get_token, call_function, action
+from .api_wrapper import APIWrapper
 
 
 class DataWrapper:
     def __init__(self, username, password, redis_host='localhost', proxy=None):
-        self.session, redirect_url = login(username, password, proxy)
-        self.session = get_token(self.session, redirect_url)
+        self.api = APIWrapper()
+        self.api.login(username, password, proxy)
+        self.api.refresh_token()
         self.redis = Redis(redis_host)
 
     def get_messages(self):
-        data = call_function(self.session, 'message')
+        data = self.api.call_function('message')
         try:
             messages = {}
             for entry in data:
@@ -30,7 +31,7 @@ class DataWrapper:
         raw = self.redis.get(redis_key)
         devices = json.loads(raw) if raw else {}
         if not devices:
-            data = call_function(self.session, 'device')
+            data = self.api.call_function('device')
             try:
                 for item in data:
                     if item['type'] == 'RST':
@@ -55,7 +56,7 @@ class DataWrapper:
         raw = self.redis.get(redis_key)
         locations = json.loads(raw) if raw else {}
         if not locations:
-            data = call_function(self.session, 'location')
+            data = self.api.call_function('location')
             try:
                 for item in data:
                     name = item['config']['name']
@@ -73,7 +74,7 @@ class DataWrapper:
         raw = self.redis.get(redis_key)
         capability_states = json.loads(raw) if raw else {}
         if not capability_states:
-            data = call_function(self.session, 'capability/states')
+            data = self.api.call_function('capability/states')
             try:
                 for item in data:
                     item_id = item['id']
@@ -99,7 +100,8 @@ class DataWrapper:
         return location_devices
 
     def action(self, target, params):
-        res = action(self.session, target=target, params=params)
+        res = self.api.action(target=target, params=params)
         data = res.json()
         return data
+
 
