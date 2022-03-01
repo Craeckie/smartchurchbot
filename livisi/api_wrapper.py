@@ -1,3 +1,5 @@
+import logging
+
 import requests
 import json
 import re
@@ -42,16 +44,19 @@ class APIWrapper:
                                                                              "Redirect_Uri": "https://home.livisi.de/#/auth"},
                            auth=('35903586', 'NoSecret'))
 
-        token = res.json()
-        auth_header = {'Authorization': f'Bearer {token["access_token"]}'}
-        self.session.headers.update(auth_header)
+        data = res.json()
+        try:
+            auth_header = {'Authorization': f'Bearer {data["access_token"]}'}
+            self.session.headers.update(auth_header)
+        except KeyError as e:
+            logging.error(data)
+            raise ValueError(f"Got an unexpected response:\n{data}") from e
 
     def call_function(self, function):
         url = parse.urljoin('https://api.services-smarthome.de/', function)
         res = self.session.get(url, timeout=40)
         data = res.json()
         if 'errorcode' in data and data['errorcode'] == 2007:
-            self.refresh_token()
             res = self.session.get(url, timeout=40)
         data = res.json()
         return data
