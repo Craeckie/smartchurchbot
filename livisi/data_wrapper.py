@@ -17,8 +17,14 @@ class DataWrapper:
         try:
             messages = {}
             for entry in data:
-                device_name = entry['properties']['deviceName']
-                if device_name in messages:
+                properties = entry['properties']
+                device_name = None
+                if 'deviceName' in properties:
+                    device_name = properties['deviceName']
+                elif 'deviceGroup' in properties:
+                    device_name = properties['deviceGroup']
+
+                if device_name and device_name in messages:
                     messages[device_name].append(entry)
                 else:
                     messages[device_name] = [entry]
