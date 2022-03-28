@@ -45,6 +45,7 @@ class APIWrapper:
                            auth=('35903586', 'NoSecret'))
 
         data = res.json()
+        logging.info(data)
         try:
             auth_header = {'Authorization': f'Bearer {data["access_token"]}'}
             self.session.headers.update(auth_header)
@@ -57,6 +58,7 @@ class APIWrapper:
         res = self.session.get(url, timeout=40)
         data = res.json()
         if 'errorcode' in data and data['errorcode'] == 2007:
+            self.refresh_token()
             res = self.session.get(url, timeout=40)
         data = res.json()
         return data
