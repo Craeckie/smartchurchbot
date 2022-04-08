@@ -7,9 +7,8 @@ from .api_wrapper import APIWrapper
 
 class DataWrapper:
     def __init__(self, username, password, redis_host='localhost', proxy=None):
-        self.api = APIWrapper()
-        self.api.login(username, password, proxy)
-        self.api.refresh_token()
+        self.api = APIWrapper(username, password, proxy)
+        self.api.login()
         self.redis = Redis(redis_host)
 
     def get_messages(self):
