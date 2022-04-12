@@ -64,11 +64,11 @@ class APIWrapper:
 
     def call_function(self, function):
         url = parse.urljoin('https://api.services-smarthome.de/', function)
-        res = self.session.get(url, timeout=40, )
+        res = self.session.get(url, timeout=15)
         data = res.json()
         if 'errorcode' in data and data['errorcode'] == 2007:
             if self.login():
-                res = self.session.get(url, timeout=40)
+                res = self.session.get(url, timeout=15)
                 data = res.json()
             else:
                 data = {'msg': 'Login failed!'}
