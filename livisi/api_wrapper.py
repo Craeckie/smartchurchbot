@@ -1,11 +1,11 @@
 import logging
 
 import requests
-import json
-import re
 import random
 from urllib import parse
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 
 
 class APIWrapper:
@@ -23,6 +23,10 @@ class APIWrapper:
                 'http': self.proxy,
                 'https': self.proxy
             })
+        retries = Retry(total=5,
+                             backoff_factor=0.1,
+                             status_forcelist=[500, 502, 503, 504])
+        self.session.mount('https://', HTTPAdapter(max_retries=retries))
         url = 'https://auth.services-smarthome.de/authorize?response_type=code&client_id=35903586&redirect_uri=https%3A%2F%2Fhome.livisi.de%2F%23%2Fauth&scope=&lang=de-DE&state=1065019c-f600-41d4-9037-c65830ad199a'
         res = self.session.get(url)
         h = BeautifulSoup(res.text, 'html.parser')
@@ -60,7 +64,7 @@ class APIWrapper:
 
     def call_function(self, function):
         url = parse.urljoin('https://api.services-smarthome.de/', function)
-        res = self.session.get(url, timeout=40)
+        res = self.session.get(url, timeout=40, )
         data = res.json()
         if 'errorcode' in data and data['errorcode'] == 2007:
             if self.login():

@@ -24,8 +24,11 @@ thermo_backend = Livisi(username=os.environ.get('LIVISI_USERNAME'),
                         proxy=proxy)
 
 NEWS_MARKUP = 'Nachrichten'
+THERMOSTAT_LIST = 'Thermostate'
 MANUAL_THERMOSTATS = 'Manuelle Thermostate'
-MAIN_MARKUP = ReplyKeyboardMarkup([[NEWS_MARKUP, MANUAL_THERMOSTATS]])
+MAIN_MARKUP = ReplyKeyboardMarkup([[NEWS_MARKUP, THERMOSTAT_LIST], [MANUAL_THERMOSTATS]])
+FLOOR_MARKUP_VALUES = ['DG', 'OG', 'EG', 'KG', 'Andere']
+FLOOR_MARKUP = ReplyKeyboardMarkup([[floor] for floor in FLOOR_MARKUP_VALUES])
 
 
 @restricted
@@ -52,18 +55,46 @@ def news(update: Update, context: CallbackContext):
 
 
 @restricted
-def device_state(update: Update, context: CallbackContext):
-    try:
-        device_states = thermo_backend.get_device_states()
-        msg = ''
-        for mode, location_data in device_states.items():
-            msg += f'<b>{mode.capitalize()}</b>\n'
-            for location_name, devices in location_data.items():
-                msg += f'<pre>{location_name}</pre>\n'
-                for device in devices:
-                    msg += f'{device["name"]}: /TA{device["local_index"]}\n'
+def devices_floor_select(update: Update, context: CallbackContext):
+    update.message.reply_text(str('Wähle ein Stockwerk'), parse_mode=ParseMode.HTML, reply_markup=FLOOR_MARKUP)
 
-                msg += '\n'
+
+@restricted
+def device_state(update: Update, context: CallbackContext):
+    floor = update.message.text
+    try:
+        devices_by_location = thermo_backend.get_devices()
+        msg = ''
+        for location_name, devices in devices_by_location.items():
+            if not location_name.lower().startswith(floor.lower()):
+                continue
+            msg += f'<pre>{location_name}</pre>\n'
+            for device in devices:
+                msg += f'<b>{device["name"]}</b>\n'
+                msg += f'   SN: {device["serial_number"]}\n'
+                msg += f'   Temp Ist:  {device["temperature_set"]}°C\n'
+                msg += f'   Temp Soll: {device["temperature_actual"]}°C\n'
+                msg += f'   Luftf.: {device["humidity"]}%\n'
+                msg += f'   Modus: {device["mode"]}\n'
+
+            msg += '\n'
+        update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
+    except Exception as e:
+        update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
+
+@restricted
+def manual_devices(update: Update, context: CallbackContext):
+    try:
+        devices = thermo_backend.get_devices(operationMode='Manu')
+        msg = f'<u>Manuell</u>\n'
+        for location_name, devices in devices.items():
+            msg += f'<pre>{location_name}</pre>\n'
+            for device in devices:
+                msg += f'<b>{device["name"]}</b>\n'
+                msg += f'   SN: {device["serial_number"]}\n'
+                msg += f'Auf Automatisch stellen: /TA{device["local_index"]}\n'
+        else:
+            msg += '<i>Keine manuellen Thermostate gefunden</i>'
         update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
     except Exception as e:
         update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
@@ -84,9 +115,20 @@ def device_state_auto(update: Update, context: CallbackContext):
         update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
 
 
+@restricted
+def unknown_command(update: Update, context: CallbackContext):
+    update.message.reply_text('Unbekannter Befehl', reply_markup=MAIN_MARKUP)
+
+
 start_handler = CommandHandler('start', start)
 dispatcher.add_handler(MessageHandler(Filters.text(NEWS_MARKUP), news))
-dispatcher.add_handler(MessageHandler(Filters.text(MANUAL_THERMOSTATS), device_state))
+dispatcher.add_handler(MessageHandler(Filters.text(THERMOSTAT_LIST), devices_floor_select))
+dispatcher.add_handler(MessageHandler(Filters.text(FLOOR_MARKUP_VALUES), device_state))
 dispatcher.add_handler(MessageHandler(Filters.regex(r'/TA[0-9]+'), device_state_auto))
+dispatcher.add_handler(MessageHandler(Filters.text(MANUAL_THERMOSTATS), manual_devices))
+dispatcher.add_handler(MessageHandler(~Filters.text(NEWS_MARKUP) &
+                                      ~Filters.text(THERMOSTAT_LIST) &
+                                      ~Filters.text(FLOOR_MARKUP_VALUES),
+                                      unknown_command))
 dispatcher.add_handler(start_handler)
 updater.start_polling()
