@@ -51,7 +51,7 @@ class DataWrapper:
                             'location': item['location'][len('/location/'):],
                             'raw': item
                         }
-                self.redis.set(redis_key, json.dumps(devices), ex=3600)
+                self.redis.set(redis_key, json.dumps(devices), ex=30)
             except Exception as e:
                 raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return devices
@@ -84,7 +84,7 @@ class DataWrapper:
                 for item in data:
                     item_id = item['id']
                     capability_states[item_id] = item['state']
-                self.redis.set(redis_key, json.dumps(capability_states), ex=5)
+                self.redis.set(redis_key, json.dumps(capability_states), ex=14)
             except Exception as e:
                 raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return capability_states
