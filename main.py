@@ -68,9 +68,9 @@ def device_state(update: Update, context: CallbackContext):
         for location_name, devices in devices_by_location.items():
             if not location_name.lower().startswith(floor.lower()):
                 continue
-            msg += f'<pre>{location_name}</pre>\n'
+            msg += f'<b>{location_name}</b>\n'
             for device in devices:
-                msg += f'<b>{device["name"]}</b>\n'
+                msg += f'<pre>{device["name"]}</pre>\n'
                 msg += f'   SN: {device["serial_number"]}\n'
                 msg += f'   Temp Ist:  {device["temperature_set"]}°C\n'
                 msg += f'   Temp Soll: {device["temperature_actual"]}°C\n'
@@ -88,9 +88,9 @@ def manual_devices(update: Update, context: CallbackContext):
         devices = thermo_backend.get_devices(operationMode='Manu')
         msg = f'<u>Manuell</u>\n'
         for location_name, devices in devices.items():
-            msg += f'<pre>{location_name}</pre>\n'
+            msg += f'<b>{location_name}</b>\n'
             for device in devices:
-                msg += f'<b>{device["name"]}</b>\n'
+                msg += f'<pre>{device["name"]}</pre>\n'
                 msg += f'   SN: {device["serial_number"]}\n'
                 msg += f'Auf Automatisch stellen: /TA{device["local_index"]}\n'
         else:
