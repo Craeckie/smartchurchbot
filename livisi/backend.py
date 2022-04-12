@@ -70,14 +70,13 @@ class Livisi:
         return devices_information
 
     def change_device_state(self, local_index, state='Auto'):
-        device_states = self.get_device_states()
+        devices_by_location = self.get_devices()
         cap_id = None
-        for mode, location_data in device_states.items():
-            for location_name, devices in location_data.items():
-                for device in devices:
-                    if device['local_index'] == local_index:
-                        cap_id = device['cap_id']
-                        break
+        for location_name, devices in devices_by_location.items():
+            for device in devices:
+                if device['local_index'] == local_index:
+                    cap_id = device['cap_id']
+                    break
         res = self.wrapper.action(target=f'/capability/{cap_id}',
                                   params={"operationMode": {"type": "Constant", "value": state}})
 
