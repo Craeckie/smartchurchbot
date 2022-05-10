@@ -70,12 +70,14 @@ def device_state(update: Update, context: CallbackContext):
                 continue
             msg += f'<b>{location_name}</b>\n'
             for device in devices:
-                msg += f'<pre>{device["name"]}</pre>\n'
-                msg += f'   SN: {device["serial_number"]}\n'
-                msg += f'   Temp Ist:  {device["temperature_set"]}°C\n'
-                msg += f'   Temp Soll: {device["temperature_actual"]}°C\n'
-                msg += f'   Luftf.: {device["humidity"]}%\n'
-                msg += f'   Modus: {device["mode"]}\n'
+                temp_actual = str(device["temperature_actual"]).rjust(4, ' ')
+                temp_set = str(device["temperature_set"]).rjust(4, ' ')
+                msg += f'{device["name"]}\n'
+                msg += f'  🆔:<code> {device["serial_number"]}</code>\n'
+                msg += f'  🌡:<code> {temp_set}°C</code> <i>(ist)</i>\n'
+                msg += f'  🌡:<code> {temp_actual}°C</code> <i>(soll)</i>\n'
+                msg += f'  💦:<code> {device["humidity"]}%</code>\n'
+                msg += f'  🚦:<code> {device["mode"]}</code>\n'
 
             msg += '\n'
         update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
