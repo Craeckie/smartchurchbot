@@ -24,8 +24,8 @@ class Livisi:
                     }
                     capabilites = [capability_states[cap_id] for cap_id in device['capabilities']]
                     name_map = {
-                        'pointTemperature': 'temperature_set',
-                        'temperature': 'temperature_actual',
+                        'pointTemperature': 'temperature_actual',
+                        'temperature': 'temperature_set',
                         'humidity': 'humidity',
                     }
                     for cap in capabilites:
