@@ -69,7 +69,10 @@ def device_state(update: Update, context: CallbackContext):
             if not location_name.lower().startswith(floor.lower()):
                 continue
             msg += f'<b>{location_name}</b>\n'
+            firstDevice = True
             for device in devices:
+                if not firstDevice:
+                    msg += '\n'
                 temp_actual = str(device["temperature_actual"]).rjust(4, ' ')
                 temp_set = str(device["temperature_set"]).rjust(4, ' ')
                 msg += f'{device["name"]}\n'
@@ -78,6 +81,7 @@ def device_state(update: Update, context: CallbackContext):
                 msg += f'  🌡:<code> {temp_actual}°C</code> <i>(soll)</i>\n'
                 msg += f'  💦:<code> {device["humidity"]}%</code>\n'
                 msg += f'  🚦:<code> {device["mode"]}</code>\n'
+                firstDevice = False
 
             msg += '\n'
         update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
