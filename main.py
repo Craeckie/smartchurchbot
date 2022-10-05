@@ -38,20 +38,25 @@ def start(update: Update, context: CallbackContext):
 
 @restricted
 def news(update: Update, context: CallbackContext):
+    messages = None
     try:
+        update.message.reply_chat_action(action=telegram.ChatAction.TYPING)
         messages = thermo_backend.get_messages()
-        if not messages:
-            msg = 'Keine Nachrichten gefunden'
-        else:
-            msg = ''
-            for device_name, entries in messages.items():
+    except Exception as e:
+        update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
+    if not messages:
+        msg = 'Keine Nachrichten gefunden'
+    else:
+        msg = ''
+        for device_name, entries in messages.items():
+            try:
                 msg += f'<pre>{device_name}</pre>\n'
                 for entry in entries:
                     msg += f'- {entry["type"]}\n'
                 msg += '\n'
-        update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
-    except Exception as e:
-        update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
+            except Exception as e:
+                update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
+    update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
 
 
 @restricted
