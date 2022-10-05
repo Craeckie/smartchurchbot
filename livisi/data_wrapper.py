@@ -16,12 +16,15 @@ class DataWrapper:
         try:
             messages = {}
             for entry in data:
-                properties = entry['properties']
-                device_name = None
-                if 'deviceName' in properties:
-                    device_name = properties['deviceName']
-                elif 'deviceGroup' in properties:
-                    device_name = properties['deviceGroup']
+                if 'properties' in entry:
+                    properties = entry['properties']
+                    device_name = None
+                    if 'deviceName' in properties:
+                        device_name = properties['deviceName']
+                    elif 'deviceGroup' in properties:
+                        device_name = properties['deviceGroup']
+                else:
+                    device_name = entry['type']
 
                 if device_name and device_name in messages:
                     messages[device_name].append(entry)
@@ -48,7 +51,7 @@ class DataWrapper:
                             'type': item['type'],
                             'serialNumber': item['serialNumber'],
                             'capabilities': [cap_path[len('/capability/'):] for cap_path in item['capabilities']],
-                            'location': item['location'][len('/location/'):],
+                            'location': item['location'][len('/location/'):] if 'location' in item else 'N/A',
                             'raw': item
                         }
                 self.redis.set(redis_key, json.dumps(devices), ex=30)

@@ -38,7 +38,7 @@ class Livisi:
                     return information
         return None
 
-    def get_devices(self, operationMode=None):
+    def get_devices(self, operationMode=None, minActualTemp=None):
         devices_information = {}
         location_devices = self.wrapper.get_devices_by_location()
         capability_states = self.wrapper.get_capability_states()
@@ -48,24 +48,27 @@ class Livisi:
             for device in devices:
                 for cur_cap_id, state in capability_states.items():
                     if cur_cap_id in device['capabilities']:
-                        if 'operationMode' in state:
-                            mode = state['operationMode']['value']
-                            if not operationMode or mode == operationMode:
-                                device_data = self.get_device_information(device_id=device['id'],
-                                                                          location_devices=location_devices,
-                                                                          capability_states=capability_states)
-                                device_data.update({
-                                    'cap_id': cur_cap_id,
-                                    'local_index': local_index,
-                                    'mode': mode,
-                                })
-                                #if mode not in device_states:
-                                #    device_states[mode] = {}
-                                if location_name not in devices_information: #device_states[mode]:
-                                    devices_information[location_name] = []
-                                    #device_states[mode][location_name] = []
-                                #device_states[mode][location_name].append(device_data)
-                                devices_information[location_name].append(device_data)
+                        if 'operationMode' not in state:
+                            continue
+                        mode = state['operationMode']['value']
+                        if operationMode and mode != operationMode:
+                            continue
+                        device_data = self.get_device_information(device_id=device['id'],
+                                                                  location_devices=location_devices,
+                                                                  capability_states=capability_states)
+                        if not minActualTemp or float(device_data['temperature_actual']) >= minActualTemp:
+                            device_data.update({
+                                'cap_id': cur_cap_id,
+                                'local_index': local_index,
+                                'mode': mode,
+                            })
+                            #if mode not in device_states:
+                            #    device_states[mode] = {}
+                            if location_name not in devices_information: #device_states[mode]:
+                                devices_information[location_name] = []
+                                #device_states[mode][location_name] = []
+                            #device_states[mode][location_name].append(device_data)
+                            devices_information[location_name].append(device_data)
                 local_index += 1
         return devices_information
 

@@ -24,10 +24,12 @@ thermo_backend = Livisi(username=os.environ.get('LIVISI_USERNAME'),
                         proxy=proxy)
 
 NEWS_MARKUP = 'Nachrichten'
-THERMOSTAT_LIST = 'Thermostate'
+THERMOSTAT_LIST = 'Stockwerk'
 MANUAL_THERMOSTATS = 'Manuelle Thermostate'
-MAIN_MARKUP = ReplyKeyboardMarkup([[NEWS_MARKUP, THERMOSTAT_LIST], [MANUAL_THERMOSTATS]])
-FLOOR_MARKUP_VALUES = ['DG', 'OG', 'EG', 'KG', 'Andere']
+DEFECTIVE_THERMOSTATS = 'Durchlaufende'
+MAIN_MARKUP = ReplyKeyboardMarkup([[NEWS_MARKUP], [THERMOSTAT_LIST, MANUAL_THERMOSTATS, DEFECTIVE_THERMOSTATS]])
+OTHER_FLOOR = 'Andere'
+FLOOR_MARKUP_VALUES = ['DG', 'OG', 'EG', 'KG', OTHER_FLOOR]
 FLOOR_MARKUP = ReplyKeyboardMarkup([[floor] for floor in FLOOR_MARKUP_VALUES])
 
 
@@ -72,7 +74,12 @@ def device_state(update: Update, context: CallbackContext):
         devices_by_location = thermo_backend.get_devices()
         msg = ''
         for location_name, devices in devices_by_location.items():
-            if not location_name.lower().startswith(floor.lower()):
+            if floor == OTHER_FLOOR:
+                # If current location is not on any floor
+                if any(floor for floor in set(FLOOR_MARKUP_VALUES) - set([OTHER_FLOOR])
+                           if location_name.lower().startswith(floor.lower())):
+                    continue
+            elif not location_name.lower().startswith(floor.lower()):
                 continue
             msg += f'<b>{location_name}</b>\n'
             firstDevice = True
@@ -115,6 +122,27 @@ def manual_devices(update: Update, context: CallbackContext):
     except Exception as e:
         update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
 
+@restricted
+def defective_devices(update: Update, context: CallbackContext):
+    update.message.reply_chat_action(action=telegram.ChatAction.TYPING)
+    try:
+        devices = thermo_backend.get_devices(minActualTemp=25)
+        msg = f'<u>Wahrscheinlich durchlaufend</u>\n'
+        for location_name, devices in devices.items():
+            msg += f'<b>{location_name}</b>\n'
+            for device in devices:
+                temp_actual = str(device["temperature_actual"]).rjust(4, ' ')
+                temp_set = str(device["temperature_set"]).rjust(4, ' ')
+
+                msg += f'<pre>{device["name"]}</pre>\n'
+                msg += f'  🌡<code> {temp_actual}°C (ist)</code>\n'
+                msg += f'  🌡<code> {temp_set}°C (soll)</code>\n'
+                msg += f'   SN: {device["serial_number"]}\n'
+        if not devices:
+            msg += '<i>Keine durchlaufenden Thermostate gefunden</i>'
+        update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
+    except Exception as e:
+        update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
 
 @restricted
 def device_state_auto(update: Update, context: CallbackContext):
@@ -143,6 +171,7 @@ dispatcher.add_handler(MessageHandler(Filters.text(THERMOSTAT_LIST), devices_flo
 dispatcher.add_handler(MessageHandler(Filters.text(FLOOR_MARKUP_VALUES), device_state))
 dispatcher.add_handler(MessageHandler(Filters.regex(r'/TA[0-9]+'), device_state_auto))
 dispatcher.add_handler(MessageHandler(Filters.text(MANUAL_THERMOSTATS), manual_devices))
+dispatcher.add_handler(MessageHandler(Filters.text(DEFECTIVE_THERMOSTATS), defective_devices))
 dispatcher.add_handler(MessageHandler(~Filters.text(NEWS_MARKUP) &
                                       ~Filters.text(THERMOSTAT_LIST) &
                                       ~Filters.text(FLOOR_MARKUP_VALUES),
