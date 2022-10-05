@@ -68,6 +68,7 @@ def devices_floor_select(update: Update, context: CallbackContext):
 def device_state(update: Update, context: CallbackContext):
     floor = update.message.text
     try:
+        update.message.reply_chat_action(action=telegram.ChatAction.TYPING)
         devices_by_location = thermo_backend.get_devices()
         msg = ''
         for location_name, devices in devices_by_location.items():
@@ -89,12 +90,16 @@ def device_state(update: Update, context: CallbackContext):
                 firstDevice = False
 
             msg += '\n'
+        if not msg:
+            msg = '<i>No devices found.</i>'
         update.message.reply_text(str(msg), parse_mode=ParseMode.HTML, reply_markup=MAIN_MARKUP)
     except Exception as e:
-        update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
+        update.message.reply_text(print_exception(e)[:5000], reply_markup=MAIN_MARKUP)
+
 
 @restricted
 def manual_devices(update: Update, context: CallbackContext):
+    update.message.reply_chat_action(action=telegram.ChatAction.TYPING)
     try:
         devices = thermo_backend.get_devices(operationMode='Manu')
         msg = f'<u>Manuell</u>\n'
@@ -113,6 +118,7 @@ def manual_devices(update: Update, context: CallbackContext):
 
 @restricted
 def device_state_auto(update: Update, context: CallbackContext):
+    update.message.reply_chat_action(action=telegram.ChatAction.TYPING)
     try:
         text = update.message.text
         index = int(re.match('/TA([0-9]+)', text).group(1))
