@@ -77,8 +77,8 @@ def device_state(update: Update, context: CallbackContext):
                 temp_set = str(device["temperature_set"]).rjust(4, ' ')
                 msg += f'{device["name"]}\n'
                 msg += f'  🚦<code> {device["mode"]}</code>\n'
-                msg += f'  🌡<code> {temp_set}°C (ist)</code>\n'
-                msg += f'  🌡<code> {temp_actual}°C (soll)</code>\n'
+                msg += f'  🌡<code> {temp_actual}°C (ist)</code>\n'
+                msg += f'  🌡<code> {temp_set}°C (soll)</code>\n'
                 msg += f'  💦<code> {device["humidity"]}%</code>\n'
                 msg += f'  🆔<code> {device["serial_number"]}</code>\n'
                 firstDevice = False
