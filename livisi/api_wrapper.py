@@ -1,4 +1,5 @@
 import logging
+import time
 
 import requests
 import random
@@ -87,3 +88,20 @@ class APIWrapper:
         }
         res = self.session.post('https://api.services-smarthome.de/action', json=data)
         return res
+
+    def configure(self, target: str, data: dict):
+        tries = 0
+        backoff_time = 3
+        max_tries = 5
+        while tries < max_tries:
+            res = self.session.put(f'https://api.services-smarthome.de{target}', json=data)
+            if res.status_code == 200:
+                return True
+            elif res.status_code == 409:
+                tries += 1
+                print(f'Request got rate limited, try: {tries}, backoff: {backoff_time}s')
+                time.sleep(backoff_time)
+                backoff_time *= 2
+            else:
+                return False
+        return False

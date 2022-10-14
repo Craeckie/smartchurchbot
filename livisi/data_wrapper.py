@@ -92,6 +92,21 @@ class DataWrapper:
                 raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return capability_states
 
+    def get_capabilities(self):
+        redis_key = 'capabilities'
+        raw = self.redis.get(redis_key)
+        capabilities = json.loads(raw) if raw else {}
+        if not capabilities:
+            data = self.api.call_function('capability')
+            try:
+                for item in data:
+                    item_id = item['id']
+                    capabilities[item_id] = item['config']
+                self.redis.set(redis_key, json.dumps(capabilities), ex=14)
+            except Exception as e:
+                raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
+        return capabilities
+
     def get_devices_by_location(self):
         locations = self.get_locations()
         devices = self.get_devices()
@@ -112,4 +127,5 @@ class DataWrapper:
         data = res.json()
         return data
 
-
+    def configure(self, target, data):
+        return self.api.configure(target=target, data=data)
