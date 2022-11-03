@@ -26,3 +26,11 @@ def print_exception(e):
     trace = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
     msg = f"Failed!\nException: {trace}"
     return msg
+
+
+def sort_floors(location: str):
+    return 5 if location is None else \
+           3 if location.lower().startswith('kg') else \
+           2 if location.lower().startswith('eg') else \
+           1 if location.lower().startswith('og') else \
+           0 if location.lower().startswith('dg') else 4

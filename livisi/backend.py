@@ -7,8 +7,8 @@ class Livisi:
     def __init__(self, username, password, redis_host=None, proxy=None):
         self.wrapper = DataWrapper(username, password, redis_host=redis_host, proxy=proxy)
 
-    def get_messages(self):
-        return self.wrapper.get_messages()
+    def get_messages(self, byType=False):
+        return self.wrapper.get_messages(byType=byType)
 
     def get_device_information(self, device_id, location_devices=None, capabilities=None, capability_states=None):
         if location_devices is None:

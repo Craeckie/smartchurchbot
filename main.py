@@ -7,7 +7,7 @@ from telegram.ext import CallbackContext, CommandHandler, MessageHandler, Filter
 from telegram.ext import Updater
 
 from livisi.backend import Livisi
-from utils import restricted, logging, print_exception
+from utils import restricted, logging, print_exception, sort_floors
 
 proxy = os.environ.get('PROXY')
 request_kwargs = {
@@ -45,18 +45,21 @@ def news(update: Update, context: CallbackContext):
     messages = None
     try:
         update.message.reply_chat_action(action=telegram.ChatAction.TYPING)
-        messages = thermo_backend.get_messages()
+        messages = thermo_backend.get_messages(byType=True)
     except Exception as e:
         update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
     if not messages:
         msg = 'Keine Nachrichten gefunden'
     else:
         msg = ''
-        for device_name, entries in messages.items():
+        for type, entries in messages.items():
             try:
-                msg += f'<pre>{device_name}</pre>\n'
-                for entry in entries:
-                    msg += f'- {entry["type"]}\n'
+                msg += f'<pre>{type}</pre>\n'
+                for entry in sorted(entries, key=lambda e: sort_floors(e['location'])):
+                    if entry['location']:
+                        msg += f'{entry["location"]}: {entry["name"]}\n'
+                    else:
+                        msg += f'{entry["name"]}\n'
                 msg += '\n'
             except Exception as e:
                 update.message.reply_text(print_exception(e), reply_markup=MAIN_MARKUP)
@@ -117,7 +120,7 @@ def manual_devices(update: Update, context: CallbackContext):
     try:
         devices = thermo_backend.get_devices(operationMode='Manu')
         msg = f'<u>Manuell</u>\n'
-        for location_name, devices in devices.items():
+        for location_name, devices in sorted(devices.items(), key=lambda d: sort_floors(d[0])):
             msg += f'<b>{location_name}</b>\n'
             for device in devices:
                 msg += f'<pre>{device["name"]}</pre>\n'
@@ -135,7 +138,7 @@ def defective_devices(update: Update, context: CallbackContext):
     try:
         devices = thermo_backend.get_devices(minActualTemp=25)
         msg = f'<u>Wahrscheinlich durchlaufend</u>\n'
-        for location_name, devices in devices.items():
+        for location_name, devices in sorted(devices.items(), key=lambda d: sort_floors(d[0])):
             msg += f'<b>{location_name}</b>\n'
             for device in devices:
                 temp_actual = str(device["temperature_actual"]).rjust(4, ' ')

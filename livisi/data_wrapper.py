@@ -11,25 +11,42 @@ class DataWrapper:
         self.api.login()
         self.redis = Redis(redis_host)
 
-    def get_messages(self):
+    def get_messages(self, byType=False):
         data = self.api.call_function('message')
         try:
             messages = {}
             for entry in data:
+                device_name = None
+                location = None
                 if 'properties' in entry:
                     properties = entry['properties']
-                    device_name = None
                     if 'deviceName' in properties:
                         device_name = properties['deviceName']
                     elif 'deviceGroup' in properties:
                         device_name = properties['deviceGroup']
+                    if 'locationName' in properties:
+                        location = properties['locationName']
                 else:
                     device_name = entry['type']
 
-                if device_name and device_name in messages:
-                    messages[device_name].append(entry)
+                type = entry['type']
+                entry_data = {
+                    'name': device_name,
+                    'location': location,
+                    'type': type,
+                    'raw': entry
+                }
+
+                if byType:
+                    if type and type in messages:
+                        messages[type].append(entry_data)
+                    else:
+                        messages[type] = [entry_data]
                 else:
-                    messages[device_name] = [entry]
+                    if device_name and device_name in messages:
+                        messages[device_name].append(entry_data)
+                    else:
+                        messages[device_name] = [entry_data]
         except Exception as e:
             raise ValueError(f"Received data is invalid: {json.dumps(data)}") from e
         return messages
