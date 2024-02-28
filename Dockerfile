@@ -12,7 +12,7 @@ COPY ./ /opt/bot
 WORKDIR /opt/bot
 
 RUN apk add --virtual .build build-base && \
-    pip install -r re.txt && \
+    pip install -r requirements.txt && \
     apk del .build
 
 STOPSIGNAL SIGINT
