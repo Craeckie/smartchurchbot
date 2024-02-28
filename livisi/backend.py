@@ -2,10 +2,11 @@ import time
 
 from livisi.data_wrapper import DataWrapper
 
+from .config import Config
 
 class Livisi:
-    def __init__(self, username, password, redis_host=None, proxy=None):
-        self.wrapper = DataWrapper(username, password, redis_host=redis_host, proxy=proxy)
+    def __init__(self, config: Config):
+        self.wrapper = DataWrapper(config)
 
     def get_messages(self, byType=False):
         return self.wrapper.get_messages(byType=byType)

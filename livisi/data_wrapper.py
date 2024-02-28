@@ -3,13 +3,14 @@ import json
 from redis import Redis
 
 from .api_wrapper import APIWrapper
+from .config import Config
 
 
 class DataWrapper:
-    def __init__(self, username, password, redis_host='localhost', proxy=None):
-        self.api = APIWrapper(username, password, proxy)
+    def __init__(self, config: Config):
+        self.api = APIWrapper(config)
         self.api.login()
-        self.redis = Redis(redis_host)
+        self.redis = Redis(config.redis_host)
 
     def get_messages(self, byType=False):
         data = self.api.call_function('message')

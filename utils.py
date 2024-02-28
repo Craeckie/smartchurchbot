@@ -5,8 +5,8 @@ import os
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
-
-LIST_OF_ADMINS = [int(user_id.strip()) for user_id in os.environ.get('ADMIN_IDS', '').split(',')]
+ids = os.environ.get('ADMIN_IDS', '').split(',')
+LIST_OF_ADMINS = [int(user_id.strip()) for user_id in ids] if ids[0] else []
 
 
 def restricted(func):

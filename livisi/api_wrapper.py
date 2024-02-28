@@ -2,56 +2,70 @@ import logging
 import time
 
 import requests
+from requests.auth import HTTPBasicAuth
 import random
 from urllib import parse
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
+from .config import Config
 
 class APIWrapper:
-    def __init__(self, username: str, password: str, proxy: str = None):
-        self.username = username
-        self.password = password
-        self.proxy = proxy
+    def __init__(self, config: Config):
+        self.config = config
         self.session = None
         self.redirect_url = None
 
     def login(self) -> bool:
         self.session = requests.session()
-        if self.proxy:
+        if self.config.proxy:
             self.session.proxies.update({
-                'http': self.proxy,
-                'https': self.proxy
+                'http': self.config.proxy,
+                'https': self.config.proxy
             })
         retries = Retry(total=5,
                              backoff_factor=0.1,
                              status_forcelist=[500, 502, 503, 504])
-        self.session.mount('https://', HTTPAdapter(max_retries=retries))
-        url = 'https://auth.services-smarthome.de/authorize?response_type=code&client_id=35903586&redirect_uri=https%3A%2F%2Fhome.livisi.de%2F%23%2Fauth&scope=&lang=de-DE&state=1065019c-f600-41d4-9037-c65830ad199a'
-        res = self.session.get(url)
-        h = BeautifulSoup(res.text, 'html.parser')
-        form = h.form
-        form_data = {element.attrs['name']: element.attrs.get('value', '') for element in
-                     form.find_all('input', {'name': True})}
-        form_url = parse.urljoin(url, form.attrs['action'])
-        form_data['UserName'] = self.username
-        form_data['Password'] = self.password
+        self.session.mount('http://', HTTPAdapter(max_retries=retries))
+        
+        # If using Livisi Cloud:
+        #res = self.session.get(self.config.login_url)
+        #h = BeautifulSoup(res.text, 'html.parser')
+        #form = h.form
+        #form_data = {element.attrs['name']: element.attrs.get('value', '') for element in
+        #             form.find_all('input', {'name': True})}
+        #form_url = parse.urljoin(self.config.login_url, form.attrs['action'])
+        #form_data['UserName'] = self.config.username
+        #form_data['Password'] = self.config.password
 
-        res = self.session.post(form_url, data=form_data, allow_redirects=False)
-        if res.status_code != 302:
-            print(res.text)
-            return False
-        else:
-            self.redirect_url = res.headers['location']
-            return self.refresh_token()
+        #res = self.session.post(self.config.login_url, json=form_data, allow_redirects=False)
+        #if res.status_code != 302:
+        #    print(res.text)
+        #    return False
+        #else:
+        #    self.redirect_url = res.headers['location']
+
+        return self.refresh_token()
 
     def refresh_token(self) -> bool:
-        params = parse.parse_qs(parse.urlparse(self.redirect_url).fragment.split('?')[1])
-        res = self.session.post('https://auth.services-smarthome.de/token', data={"Code": params['code'][0],
-                                                                                  "Grant_Type": "authorization_code",
-                                                                                  "Redirect_Uri": "https://home.livisi.de/#/auth"},
-                                auth=('35903586', 'NoSecret'))
+        #query = parse.urlparse(self.redirect_url)
+        #params = parse.parse_qs(fragment.split('?')[1])
+        #basic_auth = HTTPBasicAuth('clientId', 'clientPass')
+        headers = {
+            "Authorization": "Basic Y2xpZW50SWQ6Y2xpZW50UGFzcw==",
+            "Content-type": "application/json",
+            "Accept": "application/json",
+        }
+        res = self.session.post(self.config.login_url, # http://IP:8080/auth/token
+                                json={"username": self.config.username,
+                                      "password": self.config.password,
+                                      "grant_type": "password"},
+                                headers=headers)
+        #res = self.session.post('https://auth.services-smarthome.de/token', data={"Code": params['code'][0],
+        #                                                                          "Grant_Type": "authorization_code",
+        #                                                                          "Redirect_Uri": "https://home.livisi.de/#/auth"},
+        #                        auth=('35903586', 'NoSecret'))
 
         data = res.json()
         logging.info(data)
@@ -64,7 +78,7 @@ class APIWrapper:
             raise ValueError(f"Got an unexpected response:\n{data}") from e
 
     def call_function(self, function):
-        url = parse.urljoin('https://api.services-smarthome.de/', function)
+        url = parse.urljoin(self.config.base_url, function)
         res = self.session.get(url, timeout=15)
         data = res.json()
         if 'errorcode' in data and data['errorcode'] == 2007:

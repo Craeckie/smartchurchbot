@@ -7,6 +7,7 @@ from telegram.ext import CallbackContext, CommandHandler, MessageHandler, Filter
 from telegram.ext import Updater
 
 from livisi.backend import Livisi
+from livisi.config import Config
 from utils import restricted, logging, print_exception, sort_floors
 
 proxy = os.environ.get('PROXY')
@@ -18,10 +19,15 @@ request_kwargs = {
 updater = Updater(token=os.environ.get('BOT_TOKEN'), use_context=True, request_kwargs=request_kwargs)
 dispatcher = updater.dispatcher
 
-thermo_backend = Livisi(username=os.environ.get('LIVISI_USERNAME'),
-                        password=os.environ.get('LIVISI_PASSWORD'),
-                        redis_host=os.environ.get('REDIS_HOST'),
-                        proxy=proxy)
+config = Config(
+    base_url=os.environ.get('LIVISI_BASE_URL', 'https://api.services-smarthome.de/'),
+    login_url=os.environ.get('LIVISI_LOGIN_URL', 'https://auth.services-smarthome.de/authorize?response_type=code&client_id=35903586&redirect_uri=https%3A%2F%2Fhome.livisi.de%2F%23%2Fauth&scope=&lang=de-DE&state=1065019c-f600-41d4-9037-c65830ad199a'),
+    username=os.environ.get('LIVISI_USERNAME', 'admin'),
+    password=os.environ.get('LIVISI_PASSWORD'),
+    redis_host=os.environ.get('REDIS_HOST', 'localhost'),
+    proxy=proxy
+)
+thermo_backend = Livisi(config)
 
 NEWS_MARKUP = 'Nachrichten'
 THERMOSTAT_LIST = 'Stockwerk'
